@@ -22,6 +22,7 @@ Thumbs.db
 /data/monthly/
 /data/package_embeddings-co.json
 /data/embeddings_cache.npz
+/result/metrics
 
 # Model training artifacts
 /result/advanced_prediction_*/
