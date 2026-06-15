@@ -185,16 +185,4 @@ python code/validate_combined_metric_correlation.py \
   --output result/combined_metric_validation.csv
 ```
 
-The validation script maps advisories to crates, keeps advisories after the configured start date, computes Pearson and Spearman correlations, and plots the combined score and each dimension against CVSS severity.
-
-## Generated Artifacts
-
-The repository may contain generated outputs such as:
-
-- `result/metrics/criticality.csv`
-- `result/metrics/maintenance.csv`
-- `result/metrics/replaceability.csv`
-- `result/graphs/*.png`
-
-These are analysis outputs rather than raw source data. If you regenerate them, keep column names consistent with the scripts above. In particular, downstream scripts expect the criticality column to be named `importance`.
-
+The validation script maps advisories to crates, keeps advisories after the configured start date, computes correlations, and plots the combined score and each dimension against CVSS severity.
