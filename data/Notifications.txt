@@ -1,0 +1,3 @@
+﻿Due to the large size of the original data, we are unable to upload it onto GitHub.
+
+The Rust package data can all be downloaded via the crates.io Rust dump and the GitHub API.

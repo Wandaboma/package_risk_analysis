@@ -1,0 +1,33 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.venv/
+venv/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Large raw datasets reconstructed from crates.io / GitHub
+/data/crates.csv
+/data/versions.csv
+/data/dependencies.csv
+/data/version_downloads.csv
+/data/version_downloads/
+/data/monthly/
+/data/package_embeddings-co.json
+/data/embeddings_cache.npz
+
+# Model training artifacts
+/result/advanced_prediction_*/
+*.pt
+*.pkl
+
+# Generated metric CSVs can be large and may trigger secret-scanning false positives
+/result/metrics/*.csv
+
