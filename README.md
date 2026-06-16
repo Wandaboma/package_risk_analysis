@@ -1,8 +1,7 @@
 ﻿# Rust Package Risk Analysis
 
-This repository contains the code and generated artifacts for a multi-dimensional risk metric for third-party Rust packages. 
-
-The core idea is that package risk cannot be captured by dependency popularity alone. The metric combines three complementary dimensions:
+This repository contains the code and data for a multi-dimensional risk metric for third-party packages. 
+The metric combines three complementary dimensions:
 
 1. **Dependency criticality**: how much impact a package can have through downstream dependents and how much risk it can inherit from upstream dependencies.
 2. **Maintenance status**: whether historical development activity suggests the package is likely to remain actively maintained.
