@@ -1,6 +1,4 @@
-﻿import argparse
 import json
-from pathlib import Path
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -26,6 +24,7 @@ def normalize_embeddings(embeddings):
 
 
 def evaluate_within_groundtruth_area(embedding_data, deduped_groundtruth):
+
     relevant_pkgs = set()
     for pair in deduped_groundtruth:
         relevant_pkgs.add(pair["name"])
@@ -35,7 +34,7 @@ def evaluate_within_groundtruth_area(embedding_data, deduped_groundtruth):
     filtered_embeddings = np.array([embedding_data[name] for name in filtered_names], dtype=np.float32)
     filtered_embeddings = normalize_embeddings(filtered_embeddings)
 
-    hit_at_1 = hit_at_5 = hit_at_10 = hit_at_20 = hit_at_50 = mrr_total = total = 0
+    hit_at_1 = hit_at_5 = hit_at_10 = hit_at_20 = hit_at_50 = hit_at_100 = mrr_total = total = 0
 
     for pair in tqdm(deduped_groundtruth, desc="Evaluating within groundtruth area"):
         dep_pkg = pair["name"]
@@ -48,7 +47,7 @@ def evaluate_within_groundtruth_area(embedding_data, deduped_groundtruth):
         dep_vec = dep_vec / np.maximum(np.linalg.norm(dep_vec), 1e-10)
         sims = np.dot(filtered_embeddings, dep_vec)
 
-        top_k = 50
+        top_k = 100
         top_k_idx = np.argpartition(-sims, top_k)[:top_k]
         ranked_idx = top_k_idx[np.argsort(-sims[top_k_idx])]
 
@@ -61,6 +60,7 @@ def evaluate_within_groundtruth_area(embedding_data, deduped_groundtruth):
                 if rank < 10: hit_at_10 += 1
                 if rank < 20: hit_at_20 += 1
                 if rank < 50: hit_at_50 += 1
+                if rank < 100: hit_at_100 += 1
                 mrr_total += 1 / (rank + 1)
                 break
 
@@ -70,6 +70,7 @@ def evaluate_within_groundtruth_area(embedding_data, deduped_groundtruth):
     print(f"Hit@10: {hit_at_10 / total:.4f}")
     print(f"Hit@20: {hit_at_20 / total:.4f}")
     print(f"Hit@50: {hit_at_50 / total:.4f}")
+    print(f"Hit@100: {hit_at_100 / total:.4f}")
     print(f"MRR:    {mrr_total / total:.4f}")
 
 
@@ -88,15 +89,19 @@ def compute_substitutability(all_names, all_embeddings, output_csv_path, thresho
     print(f"Substitutability results saved to: {output_csv_path}")
 
 def compute_avg_top20_similarity(all_names, all_embeddings, output_csv_path, top_k=20):
+
     normalized_embeddings = normalize_embeddings(all_embeddings)
     avg_sim_scores = []
 
     for i in tqdm(range(len(normalized_embeddings)), desc="Computing avg top-20 similarity"):
         vec = normalized_embeddings[i].reshape(1, -1)
         sims = np.dot(normalized_embeddings, vec.T).flatten()
+
+        sims[i] = -1.0
         top_k_sims = np.partition(sims, -top_k)[-top_k:]
         avg_sim = np.mean(top_k_sims)
         avg_sim_scores.append((all_names[i], avg_sim))
+        # if i > 100: break
 
     df = pd.DataFrame(avg_sim_scores, columns=["package_name", "avg_top20_similarity"])
     df.to_csv(output_csv_path, index=False)
@@ -107,6 +112,7 @@ def show_substitutability_distribution(csv_path):
 
     print("\nSubstitutability Distribution Summary:")
     print(df["num_substitutes"].describe())
+
 
     plt.figure(figsize=(10, 6))
     plt.hist(df["num_substitutes"], bins=50, edgecolor='black')
@@ -148,33 +154,11 @@ def add_substitute_score(csv_path, method="log", output_path=None):
     return df
 
 
-def parse_args():
-    project_root = Path(__file__).resolve().parent.parent
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--embeddings",
-        default=project_root / "data" / "package_embeddings-co.json",
-        help="Path to package embeddings JSONL file.",
-    )
-    parser.add_argument(
-        "--groundtruth",
-        default=project_root / "data" / "groundtruth_clean.json",
-        help="Path to replacement ground truth JSON file.",
-    )
-    parser.add_argument(
-        "--output",
-        default=project_root / "result" / "package_substitutability.csv",
-        help="Output CSV path for substitutability scores.",
-    )
-    return parser.parse_args()
-
-
 def main():
-    args = parse_args()
-    embedding_path = Path(args.embeddings)
-    groundtruth_path = Path(args.groundtruth)
-    output_csv_path = Path(args.output)
-    output_csv_path.parent.mkdir(parents=True, exist_ok=True)
+    path = "db-dump/data/"
+    embedding_path = path + "package_embeddings-co.json"
+    groundtruth_path = path + "groundtruth_clean.json"
+    output_csv_path = path + "package_substitutability.csv"
 
     embedding_data = load_embeddings(embedding_path)
     deduped_groundtruth = load_groundtruth(groundtruth_path)
@@ -185,6 +169,13 @@ def main():
     evaluate_within_groundtruth_area(embedding_data, deduped_groundtruth)
 
     compute_avg_top20_similarity(all_names, all_embeddings, output_csv_path)
+
+    # show_substitutability_distribution(output_csv_path)
+
+
+    # scored_csv_path = path + "package_substitutability_scored.csv"
+    # add_substitute_score(output_csv_path, method="log", output_path=scored_csv_path)
+
+
 if __name__ == "__main__":
     main()
-
