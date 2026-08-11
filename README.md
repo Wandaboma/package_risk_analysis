@@ -21,17 +21,45 @@ python -m pip install -e ".[maintenance]"  # PyTorch and Prophet
 python -m pip install -e ".[gharchive]"    # PyArrow and orjson
 ```
 
+### Library API
+
+The installed package includes the reference importance results, so callers do not
+need the repository checkout or a network request to read them:
+
+```python
+from package_risk_analysis import (
+    get_crate_importance,
+    get_reference_scores,
+    get_reference_scores_csv,
+)
+
+top_100 = get_reference_scores(limit=100)
+serde = get_crate_importance("serde")
+csv_response_body = get_reference_scores_csv()
+```
+
+`get_reference_scores()` returns dictionaries with the stable schema
+`{"crate_name": str, "importance": float}`. `get_crate_importance()` performs a
+case-insensitive lookup and returns one such dictionary or `None`.
+`get_reference_scores_csv()` returns the complete UTF-8 CSV text and can be used
+directly as an HTTP or service response body with content type `text/csv`.
+
+The readable source is committed as
+[`result/crate_importance_reference.csv`](result/crate_importance_reference.csv). It
+contains the `crate_name` and `importance_with_download_portion` fields exported from
+the experiment result, with the latter renamed to the public `importance` field.
+
 ## Repository layout
 
 ```text
-src/package_risk_analysis/                # installable data-preparation library
+src/package_risk_analysis/                # installable API, data preparation, resources
 scripts/fetch_data.py                     # fetches all public inputs
 scripts/run_all.py                        # runs the complete analysis pipeline
 code/                                     # analysis entry-point scripts
 code/helper/                              # optional collection/enrichment scripts
 data/README.md                            # provenance and limitations
 data/samples/                             # ten-record fixtures for every input format
-result/                                   # generated metrics and figures
+result/                                   # generated metrics and reference scores
 ```
 
 ## One-command workflow

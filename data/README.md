@@ -8,6 +8,37 @@ the reported measurements.
 Run `package-risk-data all` after installing the project to detect and retrieve
 missing public data. Existing non-empty files are retained unless `--force` is used.
 
+## Fetch and workflow scripts
+
+Run these commands from the repository root. Fetch all public crates.io and advisory
+inputs (existing non-empty files are skipped):
+
+```bash
+python scripts/fetch_data.py
+```
+
+Common data options include:
+
+```bash
+python scripts/fetch_data.py --days 180 --sqlite
+python scripts/fetch_data.py --token-file /path/to/github-token
+python scripts/fetch_data.py \
+  --gharchive-root /path/to/gharchive \
+  --gharchive-start 2024-01-01 --gharchive-end 2025-12-31
+```
+
+After the required raw and derived inputs are present, run the complete analysis:
+
+```bash
+python scripts/run_all.py
+```
+
+Use `python scripts/run_all.py --dry-run` to inspect the commands, `--fetch` to run
+public-data retrieval first, or `--stages criticality maintenance` to select stages.
+The full replaceability stage also requires `crate_function_conclude.csv`,
+`deprecated_pairs.csv`, and `embeddings_cache.npz`; these are derived model outputs,
+not downloadable public source datasets.
+
 The `crates.csv`, `versions.csv`, and `dependencies.csv` files originate in the
 crates.io **PostgreSQL database dump**. They are raw table exports and retain
 database-internal identifiers such as `crate_id` and `version_id`. Use
@@ -18,9 +49,13 @@ database-internal identifiers such as `crate_id` and `version_id`. Use
 > The separate daily archive can provide a selected window; the data command defaults
 > to 90 days to keep storage and transfer costs bounded.
 
-GitHub activity inputs require the separate GH Archive collection pipeline documented
-in the root README. Security advisory retrieval works using`GITHUB_TOKEN`/`GH_TOKEN` 
-(recommended) or `--token-file PATH`. 
+GitHub activity inputs require the GH Archive collection pipeline documented in the
+root README. Security advisory retrieval uses `GITHUB_TOKEN`/`GH_TOKEN` (recommended)
+or `--token-file PATH`.
+
+The two-column reference result used by the installed library is stored at
+`result/crate_importance_reference.csv`; it is an output artifact rather than a raw
+input fixture.
 
 ## Included fixtures
 

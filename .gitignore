@@ -35,6 +35,7 @@ Thumbs.db
 /result/maintenance_model/
 /result/*.csv
 /result/*.json
+!/result/crate_importance_reference.csv
 
 # Credentials must remain outside version control
 *github-token*
