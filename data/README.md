@@ -21,13 +21,12 @@ clearer than processing raw CSV files.
 > to 90 days to keep storage and transfer costs bounded.
 
 GitHub activity inputs require the separate GH Archive collection pipeline documented
-in the root README. Security advisory retrieval works anonymously at low volume, or
-with `GITHUB_TOKEN`/`GH_TOKEN` (recommended) or `--token-file PATH`. Tokens are never
-accepted as command-line values.
+in the root README. Security advisory retrieval works using`GITHUB_TOKEN`/`GH_TOKEN` 
+(recommended) or `--token-file PATH`. 
 
 ## Included fixtures
 
-Each fixture contains ten logical records (plus a header for CSV files):
+Each fixture contains ten example records (plus a header for CSV files):
 
 | Fixture | Role |
 |---|---|
