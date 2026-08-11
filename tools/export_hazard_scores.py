@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export the two-column importance reference dataset and packaged gzip resource."""
+"""Export the first package hazard scores and their packaged gzip resource."""
 
 from __future__ import annotations
 
@@ -9,8 +9,16 @@ import gzip
 from pathlib import Path
 
 
-def export_reference_scores(source: Path, csv_output: Path, gzip_output: Path) -> int:
-    """Export crate names and importance values, returning the record count."""
+def export_hazard_scores(
+    source: Path,
+    csv_output: Path,
+    gzip_output: Path,
+    max_lines: int = 10_000,
+) -> int:
+    """Export a header and hazard-score rows, returning the data-record count."""
+    if max_lines < 2:
+        raise ValueError("max_lines must allow one header and at least one data record")
+    record_limit = max_lines - 1
     csv_output.parent.mkdir(parents=True, exist_ok=True)
     gzip_output.parent.mkdir(parents=True, exist_ok=True)
 
@@ -23,25 +31,27 @@ def export_reference_scores(source: Path, csv_output: Path, gzip_output: Path) -
         if not reader.fieldnames:
             raise ValueError(f"source CSV has no header: {source}")
         name_column = "crate_name"
-        importance_column = (
-            "importance"
-            if "importance" in reader.fieldnames
+        score_column = (
+            "score"
+            if "score" in reader.fieldnames
             else "importance_with_download_portion"
         )
-        missing = {name_column, importance_column} - set(reader.fieldnames)
+        missing = {name_column, score_column} - set(reader.fieldnames)
         if missing:
             raise ValueError(f"source CSV is missing columns: {sorted(missing)}")
 
-        writer = csv.DictWriter(output_file, fieldnames=["crate_name", "importance"])
+        writer = csv.DictWriter(output_file, fieldnames=["crate_name", "score"])
         writer.writeheader()
         for row in reader:
             name = row[name_column].strip()
-            importance_text = row[importance_column].strip()
-            if not name or not importance_text:
+            score_text = row[score_column].strip()
+            if not name or not score_text:
                 continue
-            importance = float(importance_text)
-            writer.writerow({"crate_name": name, "importance": format(importance, ".17g")})
+            float(score_text)
+            writer.writerow({"crate_name": name, "score": score_text})
             count += 1
+            if count >= record_limit:
+                break
     temporary_csv.replace(csv_output)
 
     temporary_gzip = gzip_output.with_name(gzip_output.name + ".part")
@@ -58,13 +68,15 @@ def main() -> None:
     parser.add_argument("source", type=Path)
     parser.add_argument("csv_output", type=Path)
     parser.add_argument("gzip_output", type=Path)
+    parser.add_argument("--max-lines", type=int, default=10_000)
     args = parser.parse_args()
-    count = export_reference_scores(
+    count = export_hazard_scores(
         args.source.resolve(),
         args.csv_output.resolve(),
         args.gzip_output.resolve(),
+        args.max_lines,
     )
-    print(f"Exported {count} reference records")
+    print(f"Exported {count} hazard-score records across {count + 1} CSV lines")
 
 
 if __name__ == "__main__":

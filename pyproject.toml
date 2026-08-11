@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "package-risk-analysis"
-version = "0.3.0"
+version = "0.3.1"
 description = "Reproducible multi-dimensional risk analysis for Rust packages"
 readme = "README.md"
 requires-python = ">=3.10"

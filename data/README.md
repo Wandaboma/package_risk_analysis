@@ -53,9 +53,10 @@ GitHub activity inputs require the GH Archive collection pipeline documented in 
 root README. Security advisory retrieval uses `GITHUB_TOKEN`/`GH_TOKEN` (recommended)
 or `--token-file PATH`.
 
-The two-column reference result used by the installed library is stored at
-`result/crate_importance_reference.csv`; it is an output artifact rather than a raw
-input fixture.
+The two-column result used by the installed library is stored at
+`result/crate_hazard_score.csv`. It contains exactly 10,000 CSV lines (one header plus
+the first 9,999 experiment records) and the columns `crate_name` and `score`; it is an
+output artifact rather than a raw input fixture.
 
 ## Included fixtures
 

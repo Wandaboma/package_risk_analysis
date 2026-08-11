@@ -23,31 +23,32 @@ python -m pip install -e ".[gharchive]"    # PyArrow and orjson
 
 ### Library API
 
-The installed package includes the reference importance results, so callers do not
+The installed package includes the 10,000-line hazard-score result, so callers do not
 need the repository checkout or a network request to read them:
 
 ```python
 from package_risk_analysis import (
-    get_crate_importance,
-    get_reference_scores,
-    get_reference_scores_csv,
+    get_crate_hazard_score,
+    get_hazard_scores,
+    get_hazard_scores_csv,
 )
 
-top_100 = get_reference_scores(limit=100)
-serde = get_crate_importance("serde")
-csv_response_body = get_reference_scores_csv()
+top_100 = get_hazard_scores(limit=100)
+serde = get_crate_hazard_score("serde")
+csv_response_body = get_hazard_scores_csv()
 ```
 
-`get_reference_scores()` returns dictionaries with the stable schema
-`{"crate_name": str, "importance": float}`. `get_crate_importance()` performs a
+`get_hazard_scores()` returns dictionaries with the stable schema
+`{"crate_name": str, "score": float}`. `get_crate_hazard_score()` performs a
 case-insensitive lookup and returns one such dictionary or `None`.
-`get_reference_scores_csv()` returns the complete UTF-8 CSV text and can be used
+`get_hazard_scores_csv()` returns the complete UTF-8 CSV text and can be used
 directly as an HTTP or service response body with content type `text/csv`.
 
 The readable source is committed as
-[`result/crate_importance_reference.csv`](result/crate_importance_reference.csv). It
-contains the `crate_name` and `importance_with_download_portion` fields exported from
-the experiment result, with the latter renamed to the public `importance` field.
+[`result/crate_hazard_score.csv`](result/crate_hazard_score.csv). It contains exactly
+10,000 lines: one header plus the first 9,999 experiment records, with the stable
+columns `crate_name` and `score`. `score` comes from the experiment's
+`importance_with_download_portion` field.
 
 ## Repository layout
 
