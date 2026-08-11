@@ -32,6 +32,9 @@ Thumbs.db
 /data/crate_function_conclude.csv
 /data/deprecated_pairs.csv
 /result/metrics
+/result/maintenance_model/
+/result/*.csv
+/result/*.json
 
 # Credentials must remain outside version control
 *github-token*

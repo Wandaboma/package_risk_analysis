@@ -15,6 +15,7 @@ import shutil
 import sqlite3
 import tarfile
 import tempfile
+import re
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Iterable
@@ -28,6 +29,10 @@ GHARCHIVE_URL = "https://data.gharchive.org"
 GITHUB_ADVISORIES_URL = "https://api.github.com/advisories"
 CORE_TABLES = ("crates", "versions", "dependencies")
 USER_AGENT = "package-risk-analysis/0.2"
+GITHUB_REPOSITORY_PATTERN = re.compile(
+    r"(?:https?://|git\+https?://|git@)github\.com[/:]([^/]+)/([^/#]+)",
+    re.IGNORECASE,
+)
 
 
 def _present(path: Path) -> bool:
@@ -84,6 +89,38 @@ def ensure_crates_dump(data_dir: Path, force: bool = False) -> list[Path]:
     if unresolved:
         raise RuntimeError(f"crates.io dump did not contain expected tables: {sorted(unresolved)}")
     return list(targets.values())
+
+
+def build_project_list(data_dir: Path, force: bool = False) -> Path:
+    """Derive the GH Archive repository target list from crates.csv."""
+    source = data_dir / "crates.csv"
+    destination = data_dir / "project_list.json"
+    if _present(destination) and not force:
+        print(f"[skip] repository list is already present: {destination}")
+        return destination
+    if not _present(source):
+        raise FileNotFoundError(f"cannot build repository list; missing: {source}")
+
+    repositories: set[str] = set()
+    with source.open("r", encoding="utf-8", newline="") as input_file:
+        for row in csv.DictReader(input_file):
+            repository = (row.get("repository") or "").strip()
+            match = GITHUB_REPOSITORY_PATTERN.search(repository)
+            if not match:
+                continue
+            owner = match.group(1).strip()
+            name = match.group(2).removesuffix(".git").strip()
+            if owner and name:
+                repositories.add(f"github:{owner}/{name}")
+
+    temporary = destination.with_name(destination.name + ".part")
+    temporary.write_text(
+        json.dumps(sorted(repositories, key=str.casefold), indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    temporary.replace(destination)
+    print(f"[write] {len(repositories)} repositories to {destination}")
+    return destination
 
 
 def _date_range(start: date, end: date) -> Iterable[date]:
@@ -322,6 +359,7 @@ def main() -> None:
     data_dir = args.data_dir.resolve()
     if args.command in {"crates", "all"}:
         ensure_crates_dump(data_dir, args.force)
+        build_project_list(data_dir, args.force)
     if args.command in {"downloads", "all"}:
         ensure_version_downloads(data_dir, args.days, args.end_date, args.force)
     if args.command in {"advisories", "all"}:

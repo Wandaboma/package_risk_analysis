@@ -68,6 +68,21 @@ def parse_args():
     )
 
     parser.add_argument(
+        "--importance",
+        default=IMPORTANCE_CSV,
+        help=f"Importance metric CSV. Default: {IMPORTANCE_CSV}",
+    )
+    parser.add_argument(
+        "--replacement",
+        default=REPLACEMENT_CSV,
+        help=f"Replacement metric CSV. Default: {REPLACEMENT_CSV}",
+    )
+    parser.add_argument(
+        "--activity",
+        default=ACTIVITY_CSV,
+        help=f"Maintenance metric CSV. Default: {ACTIVITY_CSV}",
+    )
+    parser.add_argument(
         "--output",
         default=OUTPUT_CSV,
         help=f"Output CSV path. Default: {OUTPUT_CSV}",
@@ -94,10 +109,14 @@ def normalize_to_0_1(values: np.ndarray) -> np.ndarray:
     return (values - min_value) / denominator
 
 
-def load_and_merge() -> pd.DataFrame:
-    imp = pd.read_csv(IMPORTANCE_CSV)
-    rep = pd.read_csv(REPLACEMENT_CSV)
-    act = pd.read_csv(ACTIVITY_CSV)
+def load_and_merge(
+    importance_path: str,
+    replacement_path: str,
+    activity_path: str,
+) -> pd.DataFrame:
+    imp = pd.read_csv(importance_path)
+    rep = pd.read_csv(replacement_path)
+    act = pd.read_csv(activity_path)
 
     required_imp_cols = {"crate_name", IMPORTANCE_COL}
     required_rep_cols = {"crate_name", REPLACEMENT_COL}
@@ -289,7 +308,7 @@ def main():
     args = parse_args()
 
     print("Loading metrics ...")
-    df = load_and_merge()
+    df = load_and_merge(args.importance, args.replacement, args.activity)
 
     print("Computing metric ranks ...")
     df = compute_metric_ranks(df)

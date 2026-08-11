@@ -729,7 +729,14 @@ def _evaluate(model, dataloader, criterion, device):
     return avg_loss, auc, preds
 
 
-def train_deep_learning_models(X_seq, y, output_dir, model_names=None):
+def train_deep_learning_models(
+    X_seq,
+    y,
+    output_dir,
+    model_names=None,
+    epochs=50,
+    batch_size=32,
+):
     """Train deep learning models using PyTorch.
     
     Args:
@@ -737,6 +744,8 @@ def train_deep_learning_models(X_seq, y, output_dir, model_names=None):
         y: Labels array
         output_dir: Directory to save results
         model_names: List of model names to train. If None, trains all.
+        epochs: Maximum training epochs.
+        batch_size: Training and evaluation batch size.
     """
     if model_names is None:
         model_names = ALL_MODELS
@@ -781,12 +790,11 @@ def train_deep_learning_models(X_seq, y, output_dir, model_names=None):
     test_ds = TensorDataset(torch.tensor(X_test_scaled, dtype=torch.float32),
                             torch.tensor(y_test, dtype=torch.float32))
 
-    train_loader = DataLoader(train_ds, batch_size=32, shuffle=True)
-    val_loader = DataLoader(val_ds, batch_size=32)
-    test_loader = DataLoader(test_ds, batch_size=32)
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val_ds, batch_size=batch_size)
+    test_loader = DataLoader(test_ds, batch_size=batch_size)
 
     results = {}
-    EPOCHS = 50
     PATIENCE = 10
     LR_PATIENCE = 5
 
@@ -810,7 +818,7 @@ def train_deep_learning_models(X_seq, y, output_dir, model_names=None):
         patience_counter = 0
         history = {'loss': [], 'val_loss': [], 'auc': [], 'val_auc': []}
 
-        for epoch in range(EPOCHS):
+        for epoch in range(epochs):
             train_loss = _train_one_epoch(model, train_loader, criterion, optimizer, device)
             val_loss, val_auc, _ = _evaluate(model, val_loader, criterion, device)
             _, train_auc, _ = _evaluate(model, train_loader, criterion, device)
@@ -830,7 +838,7 @@ def train_deep_learning_models(X_seq, y, output_dir, model_names=None):
                 patience_counter += 1
 
             if (epoch + 1) % 10 == 0 or epoch == 0:
-                print(f"  Epoch {epoch+1:3d}/{EPOCHS}  "
+                print(f"  Epoch {epoch+1:3d}/{epochs}  "
                       f"loss={train_loss:.4f}  val_loss={val_loss:.4f}  "
                       f"val_auc={val_auc:.4f}")
 
@@ -985,6 +993,10 @@ def parse_args():
         '--batch-size', type=int, default=32,
         help='Training batch size (default: 32)'
     )
+    parser.add_argument(
+        '--output-dir', default=None,
+        help='Output directory. Default: a timestamped directory below result/'
+    )
     return parser.parse_args()
 
 
@@ -1017,7 +1029,7 @@ def main():
     print(f"  Max epochs      : {args.epochs}")
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_dir = os.path.join(result_dir, f"advanced_prediction_{timestamp}")
+    output_dir = args.output_dir or os.path.join(result_dir, f"advanced_prediction_{timestamp}")
     os.makedirs(output_dir, exist_ok=True)
     print(f"  Output directory: {output_dir}\n")
 
@@ -1092,7 +1104,12 @@ def main():
     print("\n" + "=" * 60)
     print("Training Mamba model on first 20 months …")
     dl_results, X_test, y_test, scaler = train_deep_learning_models(
-        X_train_input, y, output_dir, model_names=['Mamba']
+        X_train_input,
+        y,
+        output_dir,
+        model_names=['Mamba'],
+        epochs=args.epochs,
+        batch_size=args.batch_size,
     )
 
     if 'Mamba' not in dl_results:

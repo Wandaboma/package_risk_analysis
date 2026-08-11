@@ -25,12 +25,70 @@ python -m pip install -e ".[gharchive]"    # PyArrow and orjson
 
 ```text
 src/package_risk_analysis/                # installable data-preparation library
+scripts/fetch_data.py                     # fetches all public inputs
+scripts/run_all.py                        # runs the complete analysis pipeline
 code/                                     # analysis entry-point scripts
 code/helper/                              # optional collection/enrichment scripts
 data/README.md                            # provenance and limitations
 data/samples/                             # ten-record fixtures for every input format
 result/                                   # generated metrics and figures
 ```
+
+## One-command workflow
+
+From the repository root, fetch the public crates.io and advisory inputs with:
+
+```bash
+python scripts/fetch_data.py
+```
+
+The fetcher is idempotent: it detects non-empty outputs and only retrieves missing
+files. It also derives `data/project_list.json` from the repository URLs in
+`crates.csv`. Optional examples:
+
+```bash
+python scripts/fetch_data.py --days 180 --sqlite
+python scripts/fetch_data.py --token-file /path/to/github-token
+python scripts/fetch_data.py \
+  --gharchive-root /path/to/gharchive \
+  --gharchive-start 2024-01-01 --gharchive-end 2025-12-31
+```
+
+Run all analysis stages in dependency order with:
+
+```bash
+python scripts/run_all.py
+```
+
+The runner executes dependency criticality, maintenance prediction, replaceability,
+metric combination, and advisory validation. It writes stable outputs below `result/`
+and stops with a list of missing inputs before starting an unavailable stage.
+
+Useful variants:
+
+```bash
+# Print the complete command plan without executing anything
+python scripts/run_all.py --dry-run
+
+# Fetch public inputs, then run all stages
+python scripts/run_all.py --fetch
+
+# Run or resume selected stages
+python scripts/run_all.py --stages combine validate
+
+# Fetch/process an explicit GH Archive period before the maintenance stage
+python scripts/run_all.py --fetch \
+  --gharchive-root /path/to/gharchive \
+  --gharchive-start 2024-01-01 --gharchive-end 2025-12-31
+```
+
+The full workflow additionally requires the derived
+`data/crate_function_conclude.csv`, `data/deprecated_pairs.csv`, and
+`data/embeddings_cache.npz` inputs for replaceability. These are not public source
+datasets and cannot be recreated by a generic downloader; compatible files may be
+produced with a local model or the optional enrichment helpers. Maintenance likewise
+requires monthly GH Archive features, either already under `data/monthly/` or produced
+by supplying the GH Archive options above.
 
 ## Prepare data
 
@@ -39,6 +97,8 @@ missing. The following retrieves the crates.io core tables, the
 download files, and Rust security advisories:
 
 ```bash
+python scripts/fetch_data.py
+# Equivalent installed command:
 package-risk-data --data-dir data all
 ```
 
@@ -120,7 +180,8 @@ python code/structual_importance.py \
   --versions data/versions.csv \
   --deps data/dependencies.csv \
   --version-downloads data/version_downloads.csv \
-  --out-dir result
+  --out-dir result \
+  --crate-name ""
 ```
 
 The latest-version dependency graph produces `crate_importance_metric.csv` and
@@ -129,7 +190,9 @@ supporting graph statistics. Higher `importance` means greater structural critic
 ### 2. Maintenance prediction
 
 ```bash
-python code/advanced_maintenance_prediction.py --models Mamba --epochs 50
+python code/advanced_maintenance_prediction.py \
+  --models Mamba --epochs 50 \
+  --output-dir result/maintenance_model
 ```
 
 The model consumes `data/monthly/delta_YYYY_MM.json` activity sequences and produces
@@ -149,6 +212,9 @@ The script consumes functional summaries plus cached embeddings and writes
 
 ```bash
 python code/combine_metrics.py \
+  --importance result/crate_importance_metric.csv \
+  --activity result/maintenance_model/mamba_activity_prediction.csv \
+  --replacement result/crate_replacement_metric.csv \
   --combine-method both \
   --output result/crate_combined_criticality.csv
 ```
@@ -162,9 +228,9 @@ Expected columns are `crate_name,importance`, `crate_name,activity_probability`,
 python code/validate_combined_metric_correlation.py \
   --advisories data/rust_advisories_stream.jsonl \
   --crates data/crates.csv \
-  --importance result/criticality.csv \
-  --activity result/metrics/maintenance.csv \
-  --replacement result/replaceability.csv \
+  --importance result/crate_importance_metric.csv \
+  --activity result/maintenance_model/mamba_activity_prediction.csv \
+  --replacement result/crate_replacement_metric.csv \
   --output result/combined_metric_validation.csv
 ```
 
