@@ -19,10 +19,23 @@ Thumbs.db
 /data/dependencies.csv
 /data/version_downloads.csv
 /data/version_downloads/
+/data/db-dump.tar.gz
+/data/crates.sqlite3
+/data/*.part
 /data/monthly/
+/data/gha_parquet/
 /data/package_embeddings-co.json
 /data/embeddings_cache.npz
+/data/rust_advisories_stream.jsonl
+/data/project_list.json
+/data/crates_with_stars.csv
+/data/crate_function_conclude.csv
+/data/deprecated_pairs.csv
 /result/metrics
+
+# Credentials must remain outside version control
+*github-token*
+*.token
 
 # Model training artifacts
 /result/advanced_prediction_*/
@@ -31,4 +44,3 @@ Thumbs.db
 
 # Generated metric CSVs can be large and may trigger secret-scanning false positives
 /result/metrics/*.csv
-

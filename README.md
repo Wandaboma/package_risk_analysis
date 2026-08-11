@@ -1,86 +1,126 @@
-﻿# Rust Package Risk Analysis
+# Rust Package Risk Analysis
 
-This repository contains the code and data for a multi-dimensional risk metric for third-party packages. 
-The metric combines three complementary dimensions:
+This repository implements a multi-dimensional prioritization metric for third-party
+Rust packages. It combines dependency criticality, predicted maintenance status, and
+functional replaceability. A high score does **not** mean that a crate is unsafe; it
+means that the crate may deserve more auditing, monitoring, or ecosystem support.
 
-1. **Dependency criticality**: how much impact a package can have through downstream dependents and how much risk it can inherit from upstream dependencies.
-2. **Maintenance status**: whether historical development activity suggests the package is likely to remain actively maintained.
-3. **Functional replaceability**: whether similar packages exist that could serve as practical alternatives if a package becomes vulnerable, abandoned, or unavailable.
+## Install
 
-The combined score is intended for prioritization. A high score does not mean a package is unsafe; it means the package may deserve more security auditing, maintenance monitoring, or ecosystem governance attention.
+Python 3.10 or newer is required. Installing the project now installs the shared
+analysis dependencies and the `package-risk-data` command in one reproducible step:
 
-## Repository Layout
+```bash
+python -m pip install -e .
+```
+
+Install optional dependencies only for the relevant stage:
+
+```bash
+python -m pip install -e ".[maintenance]"  # PyTorch and Prophet
+python -m pip install -e ".[gharchive]"    # PyArrow and orjson
+```
+
+## Repository layout
 
 ```text
-code/
-  structual_importance.py                 # dependency criticality metric
-  advanced_maintenance_prediction.py      # maintenance/activity prediction
-  similarity_eval.py                      # embedding-based replaceability metric
-  replacement_eval.py                     # alternate replaceability evaluation helper
-  combine_metrics.py                      # combines criticality, maintenance, replaceability
-  validate_combined_metric_correlation.py # validates metric against advisory severity
-  helper/
-    download_rust_advisories.py           # downloads GitHub Rust security advisories
-    get_crate_download.py                 # downloads crates.io daily version downloads
-    get_pkg_textual.py                    # extracts package functional summaries with an LLM
-    deprecated_identify.py                # identifies deprecated packages/replacements with an LLM
-
-data/
-  rust_advisories_stream.jsonl            # advisory data used for validation
-
-result/
-  metrics/                                # generated metric CSVs
-  graphs/                                 # generated validation plots
+src/package_risk_analysis/                # installable data-preparation library
+code/                                     # analysis entry-point scripts
+code/helper/                              # optional collection/enrichment scripts
+data/README.md                            # provenance and limitations
+data/samples/                             # ten-record fixtures for every input format
+result/                                   # generated metrics and figures
 ```
 
-## Data Notice
+## Prepare data
 
-The original crates.io dump, GitHub activity data, embeddings, and other raw intermediate files can be large, so they may not be included in the repository. The Rust package data can be reconstructed from the crates.io database dump, crates.io download archives, and the GitHub API.
-
-Expected raw inputs include:
-
-- `data/crates.csv`
-- `data/versions.csv`
-- `data/dependencies.csv`
-- `data/version_downloads.csv`
-- `data/monthly/*.json` or equivalent monthly GitHub activity files
-- package text/function data for replaceability analysis
-
-## Installation
-
-Use Python 3.10+ and install the common scientific stack:
+The public-input command checks for non-empty files and downloads only those that are
+missing. The following retrieves the crates.io core tables, the latest 90 daily
+download files, and Rust security advisories:
 
 ```bash
-pip install numpy pandas scipy scikit-learn matplotlib tqdm requests
+package-risk-data --data-dir data all
 ```
 
-For maintenance prediction, PyTorch is also required:
+To also import the raw crates.io CSV tables into an easy-to-query SQLite database:
 
 ```bash
-pip install torch
+package-risk-data --data-dir data all --sqlite
+# or, after the CSVs exist:
+package-risk-data --data-dir data sqlite --output data/crates.sqlite3
 ```
 
-## Workflow
+The crates.io CSVs originate from the
+[nightly crates.io database dump](https://crates.io/data-access), not a curated
+flat-file dataset. Consequently, they retain internal IDs (`crate_id`, `version_id`,
+and similar columns) used to join tables. The optional SQLite file keeps those raw
+columns and adds indexes to make joins inspectable with ordinary SQL. Daily counts
+come from the separate
+[version-download archive](https://static.crates.io/archive/version-downloads/).
 
-### 1. Download Advisory Data
+> **Version-download coverage:** for volume reasons, crates.io database dumps include
+> only roughly the most recent 90 days of version-download history. The separate daily
+> download archive is therefore fetched by this project; its default window is also
+> 90 days and can be changed with `--days` and `--end-date`.
 
-Download Rust advisories from GitHub's Global Security Advisories API:
+The committed files in `data/samples/` contain exactly ten records each from the
+experiment corpus and demonstrate the expected formats without making network or LLM
+calls. They are fixtures, not statistically meaningful experiment inputs. See
+[`data/README.md`](data/README.md) for the complete provenance note.
+
+### GitHub credentials
+
+Anonymous advisory requests work at low volume. For authenticated access, use an
+environment variable so a token does not enter shell history:
 
 ```bash
-python code/helper/download_rust_advisories.py --output data/rust_advisories_stream.jsonl
+export GITHUB_TOKEN="..."                 # Linux/macOS
+$env:GITHUB_TOKEN = "..."                 # PowerShell
+package-risk-data --data-dir data all
 ```
 
-Optional date filter:
+Alternatively, put only the token in a permission-restricted file and pass its path:
 
 ```bash
-python code/helper/download_rust_advisories.py --since 2025-11-01 --output data/rust_advisories_stream.jsonl
+package-risk-data --data-dir data all --token-file /path/to/github-token
 ```
 
-If GitHub rate limits anonymous requests, set `GITHUB_TOKEN` or pass `--token`.
+The command deliberately has no `--token VALUE` option. Never commit the token file.
 
-### 2. Dependency Criticality
+### GitHub activity and semantic enrichment
 
-Compute structural criticality from crates.io package, version, dependency, and download data:
+Maintenance prediction uses monthly GitHub event features. Retrieve only the explicit
+date range needed from [GH Archive](https://www.gharchive.org/); existing hourly files
+are skipped:
+
+```bash
+package-risk-data --data-dir data gharchive \
+  --start-date 2024-01-01 --end-date 2025-12-31 \
+  --output-dir /path/to/gharchive
+```
+
+Then build the monthly inputs with:
+
+```bash
+python code/helper/gharchive_info_collect.py all \
+  --input-root /path/to/gharchive \
+  --repo-list data/project_list.json \
+  --parquet-root data/gha_parquet \
+  --monthly-dir data/monthly \
+  --start-month 2024-01 --end-month 2025-12
+```
+
+Functional summaries and embeddings are derived inputs. The repository includes
+their formats and downstream analysis, but the original enrichment helpers use a
+non-local LLM client and are therefore optional rather than part of public-data
+retrieval. You may provide compatible summaries/embeddings from a local model or
+another service.
+
+## Analysis workflow
+
+All commands below are run from the repository root.
+
+### 1. Dependency criticality
 
 ```bash
 python code/structual_importance.py \
@@ -91,88 +131,40 @@ python code/structual_importance.py \
   --out-dir result
 ```
 
-This script builds the latest-version dependency graph, computes downstream and upstream structural scores, optionally weights nodes by recent downloads, and writes outputs such as:
+The latest-version dependency graph produces `crate_importance_metric.csv` and
+supporting graph statistics. Higher `importance` means greater structural criticality.
 
-- `result/crate_importance_metric.csv`
-- `result/all_crates_importance.csv`
-- `result/pagerank_global.csv`
-- `result/summary.json`
-
-The main metric expected by later steps is a CSV with:
-
-```text
-crate_name, importance
-```
-
-### 3. Maintenance Prediction
-
-Predict future activity/maintenance probability from monthly GitHub activity sequences:
+### 2. Maintenance prediction
 
 ```bash
 python code/advanced_maintenance_prediction.py --models Mamba --epochs 50
 ```
 
-The script trains a temporal model using historical activity signals such as issues, pull requests, releases, contributors, and days since last release. It writes a timestamped folder under `result/advanced_prediction_*` containing model artifacts and:
+The model consumes `data/monthly/delta_YYYY_MM.json` activity sequences and produces
+`mamba_activity_prediction.csv`. Lower `activity_probability` means greater predicted
+maintenance risk.
 
-```text
-mamba_activity_prediction.csv
-```
-
-The maintenance metric expected by later steps is:
-
-```text
-crate_name, activity_probability
-```
-
-
-### 4. Replaceability Metric
-
-The replaceability pipeline represents package functionality with text embeddings and estimates whether each package has similar alternatives.
+### 3. Replaceability
 
 ```bash
 python code/similarity_eval.py
 ```
 
-The primary output expected by later steps is:
+The script consumes functional summaries plus cached embeddings and writes
+`crate_replacement_metric.csv`. Lower `replacement_metric` means harder to replace.
 
-```text
-crate_name, replacement_metric
-```
-
-`code/replacement_eval.py` is an alternate helper for evaluating replacement/substitutability using embedding and ground-truth files:
+### 4. Combine metrics
 
 ```bash
-python code/replacement_eval.py \
-  --embeddings data/package_embeddings-co.json \
-  --groundtruth data/groundtruth_clean.json \
-  --output result/package_substitutability.csv
+python code/combine_metrics.py \
+  --combine-method both \
+  --output result/crate_combined_criticality.csv
 ```
 
-### 5. Combine Metrics
+Expected columns are `crate_name,importance`, `crate_name,activity_probability`, and
+`crate_name,replacement_metric` for the three input metrics respectively.
 
-Combine the three dimensions into a unified criticality/risk-prioritization score:
-
-```bash
-python code/combine_metrics.py --combine-method both --output result/crate_combined_criticality.csv
-```
-
-Expected input columns:
-
-- criticality: `crate_name`, `importance`
-- maintenance: `crate_name`, `activity_probability`
-- replaceability: `crate_name`, `replacement_metric`
-
-Ranking convention:
-
-- Higher `importance` means more structurally critical.
-- Lower `activity_probability` means higher maintenance risk.
-- Lower `replacement_metric` means harder to replace.
-
-The script can compute geometric-mean rank, average rank, or both.
-
-### 6. Validate Against Security Advisories
-
-Validate the metric against Rust security advisories and CVSS severity:
+### 5. Validate against advisories
 
 ```bash
 python code/validate_combined_metric_correlation.py \
@@ -184,4 +176,22 @@ python code/validate_combined_metric_correlation.py \
   --output result/combined_metric_validation.csv
 ```
 
-The validation script maps advisories to crates, keeps advisories after the configured start date, computes correlations, and plots the combined score and each dimension against CVSS severity.
+## Resource guide
+
+The figures below are planning estimates for a contemporary 8-core workstation and
+vary with corpus date, network speed, selected period, and accelerator. Measure and
+report the exact environment when reproducing results.
+
+| Step | Typical wall time | Peak working disk | Main scaling factor |
+|---|---:|---:|---|
+| Download/extract crates.io dump | 10–40 min | 8–15 GB | network and dump size |
+| Download + combine 90 daily download files | 10–30 min | 1–4 GB | network and date window |
+| Convert core CSVs to SQLite (optional) | 15–45 min | 8–20 GB extra | CSV and index size |
+| Filter 24 months of GH Archive | hours to days | 50–300+ GB | raw archive period and events |
+| Dependency criticality | 30 min–several hours | 8–32 GB RAM, 2–10 GB disk | graph size and distance bounds |
+| Maintenance training | 1–8 hours | 4–16 GB disk | model, epochs, CPU/GPU |
+| Semantic enrichment/embeddings | hours | 1–10 GB | model/service throughput |
+| Combine and advisory validation | minutes | under 2 GB | number of crates/advisories |
+
+For a format-only inspection, use `data/samples/`; it needs only a few megabytes and
+does not reproduce the study results.

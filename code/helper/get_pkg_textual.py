@@ -2,7 +2,7 @@
 Read crates_with_stars.csv, call CloudGPT Azure OpenAI to conclude each crate's
 functional identity, and save results to a CSV.
 Usage:
-    python src/get_pkg_textual.py
+    python code/helper/get_pkg_textual.py
 """
 
 import os
@@ -11,6 +11,7 @@ import sys
 import time
 import json
 import logging
+from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 
@@ -18,8 +19,9 @@ from tqdm import tqdm
 from cloudgpt_azure_openai import get_chat_completion
 
 # ── Configuration ─────────────────────────────────────────────────────────────
-INPUT_CSV  = os.path.join(os.path.dirname(__file__), "..", "data-new", "crates_with_stars.csv")
-OUTPUT_CSV = os.path.join(os.path.dirname(__file__), "..", "result", "crate_function_conclude.csv")
+ROOT_DIR = Path(__file__).resolve().parents[2]
+INPUT_CSV = str(ROOT_DIR / "data" / "crates_with_stars.csv")
+OUTPUT_CSV = str(ROOT_DIR / "data" / "crate_function_conclude.csv")
 
 ENGINE           = "gpt-4o-20241120"  # change to another available CloudGPT model if needed
 MAX_WORKERS      = 5             # parallel threads; lower if rate-limited
@@ -199,7 +201,7 @@ def load_done_keys(output_path: str) -> set:
 def main():
     os.makedirs(os.path.dirname(OUTPUT_CSV), exist_ok=True)
 
-    data_dir    = os.path.join(os.path.dirname(__file__), "..", "data-new")
+    data_dir = str(ROOT_DIR / "data")
     keyword_lut = build_keyword_lookup(data_dir)
 
     done_keys   = load_done_keys(OUTPUT_CSV)

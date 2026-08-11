@@ -3,12 +3,12 @@ Identify deprecated crates and their recommended replacements using CloudGPT Azu
 
 Reads crates_with_stars.csv, uses regex pre-filtering to find candidates that likely
 contain deprecation signals, then calls the LLM to confirm and extract the replacement
-crate name. Results are saved to result/deprecated_pairs.csv.
+crate name. Results are saved to data/deprecated_pairs.csv.
 
 Supports checkpoint/resume: already-processed crate names are skipped on restart.
 
 Usage:
-    python src/deprecated_identify.py
+    python code/helper/deprecated_identify.py
 """
 
 import csv
@@ -17,14 +17,16 @@ import os
 import sys
 import time
 import logging
+from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 
 from cloudgpt_azure_openai import get_chat_completion
 
 # -- Configuration
-INPUT_CSV  = os.path.join(os.path.dirname(__file__), "..", "data-new", "crates_with_stars.csv")
-OUTPUT_CSV = os.path.join(os.path.dirname(__file__), "..", "result", "deprecated_pairs.csv")
+ROOT_DIR = Path(__file__).resolve().parents[2]
+INPUT_CSV = str(ROOT_DIR / "data" / "crates_with_stars.csv")
+OUTPUT_CSV = str(ROOT_DIR / "data" / "deprecated_pairs.csv")
 
 ENGINE      = "gpt-4o-20241120"
 MAX_WORKERS = 10

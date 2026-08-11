@@ -6,9 +6,10 @@ This script uses GitHub's Global Security Advisories REST endpoint and writes
 JSONL rows compatible with code/validate_combined_metric_correlation.py.
 
 Examples:
-  python helper/download_rust_advisories.py
-  python helper/download_rust_advisories.py --output data/rust_advisories_stream.jsonl
-  python helper/download_rust_advisories.py --since 2025-11-01 --token %GITHUB_TOKEN%
+  python code/helper/download_rust_advisories.py
+  python code/helper/download_rust_advisories.py --output data/rust_advisories_stream.jsonl
+  python code/helper/download_rust_advisories.py --since 2025-11-01
+  python code/helper/download_rust_advisories.py --token-file /path/to/github-token
 """
 
 from __future__ import annotations
@@ -52,9 +53,12 @@ def parse_args() -> argparse.Namespace:
         help="Only keep advisories published on or after this date/time, e.g. 2025-11-01.",
     )
     parser.add_argument(
-        "--token",
-        default=os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN"),
-        help="GitHub token. Defaults to GITHUB_TOKEN or GH_TOKEN when set.",
+        "--token-file",
+        type=Path,
+        help=(
+            "Path to a file containing a GitHub token. Otherwise GITHUB_TOKEN or "
+            "GH_TOKEN is used. Token values are intentionally not accepted on argv."
+        ),
     )
     parser.add_argument(
         "--sleep",
@@ -91,6 +95,16 @@ def parse_datetime(value: str | None) -> datetime | None:
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
     return dt.astimezone(timezone.utc)
+
+
+def read_token(token_file: Path | None) -> str | None:
+    """Load a token without exposing it in the process list or shell history."""
+    if token_file is not None:
+        token = token_file.expanduser().read_text(encoding="utf-8").strip()
+        if not token:
+            raise ValueError(f"Token file is empty: {token_file}")
+        return token
+    return os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN")
 
 
 def parse_link_header(value: str | None) -> dict[str, str]:
@@ -250,6 +264,7 @@ def write_jsonl(rows: list[dict[str, Any]], output: str) -> None:
 
 def main() -> None:
     args = parse_args()
+    args.token = read_token(args.token_file)
     rows = download_advisories(args)
     write_jsonl(rows, args.output)
     print(f"Saved {len(rows)} rows to {args.output}")

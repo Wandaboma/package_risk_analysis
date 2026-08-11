@@ -1,45 +1,28 @@
-import os
-import requests
-from datetime import date, timedelta
+#!/usr/bin/env python3
+"""Compatibility entry point for recent crates.io version-download retrieval.
 
-BASE_URL = "https://static.crates.io/archive/version-downloads"
-SAVE_DIR = "../data/version_downloads"
+Prefer the installed command documented in README.md:
+    package-risk-data --data-dir data downloads --days 90
+"""
 
-os.makedirs(SAVE_DIR, exist_ok=True)
+from __future__ import annotations
 
-# start / end date
-start_date = date(2023, 11, 1)
-end_date = date(2025, 11, 30)
+import argparse
+from datetime import date
+from pathlib import Path
 
-current = start_date
+from package_risk_analysis.data import ensure_version_downloads
 
-while current <= end_date:
-    date_str = current.isoformat()
 
-    url = f"{BASE_URL}/{date_str}.csv"
-    save_path = os.path.join(SAVE_DIR, f"{date_str}.csv")
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--data-dir", type=Path, default=Path("data"))
+    parser.add_argument("--days", type=int, default=90)
+    parser.add_argument("--end-date", type=date.fromisoformat)
+    parser.add_argument("--force", action="store_true")
+    args = parser.parse_args()
+    ensure_version_downloads(args.data_dir.resolve(), args.days, args.end_date, args.force)
 
-    # skip if already downloaded
-    if os.path.exists(save_path):
-        print(f"[SKIP] {date_str}")
-        current += timedelta(days=1)
-        continue
 
-    try:
-        print(f"[DOWNLOAD] {url}")
-
-        response = requests.get(url, timeout=60)
-
-        if response.status_code == 200:
-            with open(save_path, "wb") as f:
-                f.write(response.content)
-
-            print(f"[OK] saved -> {save_path}")
-
-        else:
-            print(f"[MISS] {date_str} status={response.status_code}")
-
-    except Exception as e:
-        print(f"[ERROR] {date_str}: {e}")
-
-    current += timedelta(days=1)
+if __name__ == "__main__":
+    main()

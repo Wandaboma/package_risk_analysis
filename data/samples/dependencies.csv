@@ -1,0 +1,11 @@
+crate_id,default_features,explicit_name,features,id,kind,optional,req,target,version_id
+52,t,,{},216,0,f,*,,320
+41,t,,{},217,0,f,*,x86_64-unknown-freebsd,321
+41,t,,{},218,0,f,*,i386-apple-ios,321
+228,t,,{},219,0,f,*,le32-unknown-nacl,321
+41,t,,{},220,0,f,*,i686-unknown-freebsd,321
+228,t,,{},221,0,f,*,i686-unknown-nacl,321
+41,t,,{},222,0,f,*,i686-apple-darwin,321
+41,t,,{},223,0,f,*,arm-apple-ios,321
+228,t,,{},224,0,f,*,x86_64-unknown-nacl,321
+41,t,,{},225,0,f,*,x86_64-unknown-linux-gnu,321

@@ -15,7 +15,7 @@ Pipeline:
     * Save per-pair results to result/similarity_eval_results.csv
 
 Usage:
-    python src/similarity_eval.py
+    python code/similarity_eval.py
 """
 
 import os

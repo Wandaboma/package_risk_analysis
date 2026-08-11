@@ -1,0 +1,372 @@
+created_at,description,documentation,homepage,id,max_features,max_upload_size,name,readme,repository,trustpub_only,updated_at,github_owner,github_repo,github_stars,github_forks,github_watchers
+2023-05-01 12:06:24.629411+00,Crate name reserved,,,853351,,,madara,"<p align=""center"">
+  <h1 align=""center"">madara</h1>
+</p>
+
+Squatting this name just in case. [Contact me](mailto:me@xjonathan.dev) if you need it.",,f,2023-05-01 12:06:24.629411+00,,,,,
+2023-05-24 06:42:04.039181+00,Rust structure mapped to Swagger,,https://github.com/denganjia/openapi-schema,872703,,,openapi-schema,"# OpenApi-Schema
+
+Rust structure mapped to openapi
+
+You can use this package will openapi document into rust structure
+# Use
+```bash
+cargo add openapi-schema
+```
+```rust
+use openapi_schema::{from_path, Doc};
+
+fn main() {
+    let filepath = ""./index.json"";
+    let json = from_path(filepath);
+    match json {
+        Ok(some_doc) => match some_doc {
+            Doc::V2(swagger) => {
+                println!(""swagger version:{}"", swagger.swagger)
+            }
+            Doc::V3(openapi) => {
+                println!(""openapi version:{}"", openapi.openapi)
+            }
+        },
+        Err(e) => {
+            println!(""{:?}"", e)
+        }
+    }
+}
+```
+
+# Notice
+
+Because some words are reserved words in rust, so will the json structure mapped to rust after structure, rust in the field name is different from some of json
+  |Rust|Json|
+  | --- | --- |
+  | r#type | type |
+  | r#enum | enum |
+  | r#in | in |
+  | reference | $ref |
+
+>For using camelCase in json representation of the field, use snake_case in rust",https://github.com/denganjia/openapi-schema,f,2023-06-21 02:13:09.838873+00,denganjia,openapi-schema,2.0,0.0,1.0
+2024-02-25 16:14:19.767307+00,"Wappu is a fast and flexible web scraping library for Rust, designed to efficiently navigate and extract data from websites. Perfect for data mining, content aggregation, and web automation tasks.",,,1152587,,,wappu,"# Wappu: A Rust Web Scraping Library
+
+Wappu is a comprehensive web scraping library written in Rust, designed for ease of use and performance. It integrates seamlessly HTTP client capabilities with powerful HTML parsing functionalities, allowing users to fetch and parse web content efficiently.
+
+## Features
+
+- **Asynchronous HTTP Requests**: Fetch web pages asynchronously with a simple-to-use HTTP client.
+- **HTML Parsing**: Easily parse and query HTML documents to extract relevant data.
+- **Flexible Selectors**: Use CSS-like selectors to pinpoint and extract elements from parsed HTML.
+- **Error Handling**: Robust error handling for both network requests and HTML parsing.
+
+## Getting Started
+
+### Prerequisites
+
+Ensure you have Rust and Cargo installed on your system. Wappu requires Rust version 1.40 or newer.
+
+### Installation
+
+Add Wappu to your project's `Cargo.toml`:
+
+```toml
+[dependencies]
+wappu = ""0.2.4""
+reqwest = ""0.11.24""
+```
+
+### Quick Example
+
+Here's a quick example to fetch and parse the title of example.com:
+
+```rust
+use wappu::{WappuClient, HtmlParser, Selector};
+#[tokio::main]
+async fn main() {
+    let client = WappuClient::new();
+    let html_content = client.get(""http://example.com"", None).await.expect(""Failed to fetch content"");
+
+    let parsed_html = HtmlParser::new().parse_html(&html_content.text());
+    let mut selector = Selector::new();
+    let title_selector = selector.from_tag_name(""h1"");
+    let title_selection = title_selector.select(&parsed_html);
+    let title_text = title_selection.text();
+
+    println!(""Title: {}"", title_text);
+}
+```
+
+## Documentation
+
+For detailed documentation, including API reference and advanced usage, visit [Wappu Documentation](#). (Not yet done)
+
+## Contributing
+
+Contributions are welcome! Please see our [Contributing Guide](CONTRIBUTING.md) for more details.
+
+## License
+
+Wappu is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Thanks to the Rust community for the invaluable resources and support.
+- Special thanks to [httpbin](https://httpbin.org/) for providing HTTP request & response service, making it easier to test HTTP client functionalities.",,f,2024-03-31 16:25:27.380231+00,,,,,
+2024-03-13 10:12:48.064691+00,Provides assets management functionality for Flatbox engine,,https://konceptosociala.eu.org/flatbox,1171587,,,flatbox_assets,,https://github.com/konceptosociala/flatbox,f,2024-03-13 10:12:48.064691+00,konceptosociala,flatbox,0.0,0.0,1.0
+2024-03-25 13:26:39.711734+00,Swap Bevy Worlds at runtime,,,1185299,,,bevy_worldswap,"# Bevy World-Swap
+
+Swap an app's `World` at runtime with another `World`. Useful for having separate menu and game worlds, for separate loading and main worlds, etc.
+
+
+## Features
+
+
+
+
+## Bevy compatability
+
+| `bevy` | `bevy_worldswap` |
+|--------|-------------------|
+| 0.13   | main              |",https://github.com/UkoeHB/bevy_worldswap,f,2024-03-25 13:26:39.711734+00,UkoeHB,bevy_worldswap,4.0,1.0,1.0
+2024-04-14 16:41:03.430624+00,"Just an example repository, on how rust docs works",,,1208368,,,comments_rust_docs,,,f,2024-04-14 16:41:03.430624+00,,,,,
+2024-03-13 12:56:00.940663+00,Unofficial Lua 5.4 unsafe bindings,,,1171666,,,lua54-sys,,,f,2024-03-13 13:00:51.309345+00,,,,,
+2024-03-13 11:23:56.402703+00,An async implementation of a rqlite client,https://docs.rs/rqlite/,https://codeberg.org/zesty/rqlite-rs,1171622,,,rqlite-ha421,"# rqlite-ha421
+a temporary fork of rqlite-rs
+# rqlite-rs
+An asynchronous rqlite client for rust",https://codeberg.org/zesty/rqlite-rs,f,2024-03-13 15:55:37.648138+00,,,,,
+2024-03-17 19:53:15.17254+00,Test,,,1176759,,,minigrepsada,,,f,2024-03-17 19:57:51.706603+00,,,,,
+2025-08-08 23:35:51.015728+00,A lightweight stdio bridge server that serves StaticMCP files.,,,1787413,,,staticmcp_stdio_bridge,"# StaticMCP STDIO Bridge
+
+A lightweight stdio bridge server that serves StaticMCP files.
+
+## How It Works
+
+The StaticMCP Bridge acts as a translation layer between the MCP protocol and your static JSON files:
+
+1. **Manifest**: A `mcp.json` file describes available resources and tools
+2. **Resources**: Static JSON files in `resources/` directory
+3. **Tools**: Pre-computed tool responses in `tools/` directory structure
+4. **Bridge**: This server dynamically routes MCP requests to the appropriate JSON files
+
+_More about StaticMCP on https://staticmcp.com._
+
+## Installation
+
+```bash
+cargo install static_mcp_bridge
+```
+
+Or build from source:
+
+```bash
+git clone https://github.com/StaticMCP/StaticMCP
+cd StaticMCP/bridge
+cargo build --release
+```
+
+## Quick Start
+
+### 1. Create a StaticMCP Directory Structure
+
+```
+my-static-mcp/
+  ├── mcp.json                       # Manifest file
+  ├── resources/
+  │     ├── README.md.json           # Resource responses
+  │     └── config.json.json
+  └── tools/
+        ├── search/
+        │     ├── rust.json          # Tool response for search(""rust"")
+        │     └── javascript.json    # Tool response for search(""javascript"")
+        └── analyze/
+              └── file.json          # Tool response for analyze(""file"")
+```
+
+### 2. Create the Manifest (`mcp.json`)
+
+```json
+{
+  ""serverInfo"": {
+    ""name"": ""My StaticMCP Server"",
+    ""version"": ""1.0.0""
+  },
+  ""capabilities"": {
+    ""resources"": [
+      {
+        ""uri"": ""file://README.md"",
+        ""name"": ""Project README"",
+        ""description"": ""Main project documentation""
+      }
+    ],
+    ""tools"": [
+      {
+        ""name"": ""search"",
+        ""description"": ""Search for information"",
+        ""inputSchema"": {
+          ""type"": ""object"",
+          ""properties"": {
+            ""query"": { ""type"": ""string"" }
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+### 3. Create Resource Files
+
+`resources/README.md.json`:
+```json
+{
+  ""contents"": [
+    {
+      ""uri"": ""file://README.md"",
+      ""mimeType"": ""text/markdown"",
+      ""text"": ""# My Project\n\nThis is a sample README...""
+    }
+  ]
+}
+```
+
+### 4. Create Tool Response Files
+
+`tools/search/rust.json`:
+```json
+{
+  ""content"": [
+    {
+      ""type"": ""text"",
+      ""text"": ""Here are search results for 'rust':\n\n1. Rust Programming Language\n2. Systems programming\n3. Memory safety""
+    }
+  ]
+}
+```
+
+### 5. Run the Bridge
+
+```bash
+# Local directory
+static-mcp-bridge ./my-static-mcp
+
+# Remote URL (hosted static files)
+static-mcp-bridge https://mysite.com/my-mcp
+```
+
+## Usage with MCP Inspector
+
+Test your StaticMCP server using the official MCP Inspector:
+
+```bash
+npx @modelcontextprotocol/inspector static-mcp-bridge https://yourdomain.com/your-mcp
+```
+
+## File Path Conventions
+
+The bridge automatically maps MCP requests to file paths:
+
+### Resources
+- `file://path/to/file` → `resources/path/to/file.json`
+- `custom://resource` → `resources/resource.json`
+
+### Tools
+- Single argument: `tools/{tool_name}/{arg_value}.json`
+- Two arguments: `tools/{tool_name}/{arg1}/{arg2}.json` (sorted)
+
+Examples:
+- `search(""rust"")` → `tools/search/rust.json`
+- `analyze(file=""test.txt"", format=""json"")` → `tools/analyze/json/test.txt.json`
+
+## Response Format
+
+### Resource Responses
+```json
+{
+  ""contents"": [
+    {
+      ""uri"": ""file://example.txt"",
+      ""mimeType"": ""text/plain"",
+      ""text"": ""File content here""
+    }
+  ]
+}
+```
+
+### Tool Responses
+```json
+{
+  ""content"": [
+    {
+      ""type"": ""text"",
+      ""text"": ""Tool response text""
+    }
+  ]
+}
+```
+
+## Deployment Options
+
+### Static Web Hosting
+Deploy your StaticMCP files to any static hosting service:
+
+- **Vercel**: `vercel --prod`
+- **Netlify**: Drag & drop or Git integration
+- **GitHub Pages**: Push to `gh-pages` branch
+- **AWS S3**: Upload files to S3 bucket with public access
+- **CDN**: Use CloudFlare, AWS CloudFront, etc.
+
+### Example with Vercel
+```bash
+cd my-static-mcp
+echo '{""builds"": [{""src"": ""**"", ""use"": ""@vercel/static""}]}' > vercel.json
+vercel --prod
+```
+
+Then use: `static-mcp-bridge https://my-mcp.vercel.app`
+
+## Building StaticMCP Content
+
+You can generate your StaticMCP files using any method:
+
+### Python Script
+```python
+import json
+import os
+
+# Generate tool responses
+for query in ['rust', 'javascript', 'python']:
+    result = {""content"": [{""type"": ""text"", ""text"": f""Results for {query}...""}]}
+    os.makedirs(f'tools/search', exist_ok=True)
+    with open(f'tools/search/{query}.json', 'w') as f:
+        json.dump(result, f)
+```
+
+### Build Process
+```bash
+#!/bin/bash
+# generate-mcp.sh
+
+echo ""Generating StaticMCP content...""
+python scripts/generate_resources.py
+python scripts/generate_tools.py
+echo ""StaticMCP content ready!""
+```
+
+## Advanced Features
+
+### Error Handling
+If a requested file doesn't exist, the bridge returns an appropriate MCP error response.
+
+### CORS Support
+When serving over HTTP, the bridge handles CORS headers automatically.
+
+### Caching
+All responses are highly cacheable since content is static. Consider setting long cache headers when serving files.
+
+## Examples
+
+Check out these example StaticMCP implementations:
+
+- [Resume MCP](https://github.com/example/resume-mcp) - Personal resume and portfolio
+
+---
+
+**StaticMCP Bridge** - Turn any static file hosting into a powerful MCP server! 🚀",https://github.com/StaticMCP/stdio_bridge,f,2025-08-08 23:35:51.015728+00,StaticMCP,stdio_bridge,0.0,0.0,0.0
