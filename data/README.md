@@ -10,10 +10,8 @@ missing public data. Existing non-empty files are retained unless `--force` is u
 
 The `crates.csv`, `versions.csv`, and `dependencies.csv` files originate in the
 crates.io **PostgreSQL database dump**. They are raw table exports and retain
-database-internal identifiers such as `crate_id` and `version_id`; these identifiers
-are required for joins and are not stable public package identifiers. Use
-`package-risk-data sqlite` to create a local SQLite copy when direct SQL queries are
-clearer than processing raw CSV files.
+database-internal identifiers such as `crate_id` and `version_id`. Use
+`package-risk-data sqlite` to create a local SQLite copy.
 
 > **Download-history limitation:** the crates.io database dump intentionally contains
 > only about the most recent 90 days of version-download history for volume reasons.
