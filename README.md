@@ -2,7 +2,7 @@
 
 This repository implements a multi-dimensional prioritization metric for third-party
 Rust packages. It combines dependency criticality, predicted maintenance status, and
-functional replaceability. A high score does **not** mean that a crate is unsafe; it
+functional replaceability. A high score does not mean that a crate is unsafe; it
 means that the crate may deserve more auditing, monitoring, or ecosystem support.
 
 ## Install
@@ -35,7 +35,7 @@ result/                                   # generated metrics and figures
 ## Prepare data
 
 The public-input command checks for non-empty files and downloads only those that are
-missing. The following retrieves the crates.io core tables, the latest 90 daily
+missing. The following retrieves the crates.io core tables, the
 download files, and Rust security advisories:
 
 ```bash
@@ -51,21 +51,18 @@ package-risk-data --data-dir data sqlite --output data/crates.sqlite3
 ```
 
 The crates.io CSVs originate from the
-[nightly crates.io database dump](https://crates.io/data-access), not a curated
-flat-file dataset. Consequently, they retain internal IDs (`crate_id`, `version_id`,
+[nightly crates.io database dump](https://crates.io/data-access). 
+Consequently, they retain internal IDs (`crate_id`, `version_id`,
 and similar columns) used to join tables. The optional SQLite file keeps those raw
 columns and adds indexes to make joins inspectable with ordinary SQL. Daily counts
 come from the separate
 [version-download archive](https://static.crates.io/archive/version-downloads/).
 
 > **Version-download coverage:** for volume reasons, crates.io database dumps include
-> only roughly the most recent 90 days of version-download history. The separate daily
-> download archive is therefore fetched by this project; its default window is also
-> 90 days and can be changed with `--days` and `--end-date`.
+> only roughly the most recent 90 days of version-download history. 
 
-The committed files in `data/samples/` contain exactly ten records each from the
-experiment corpus and demonstrate the expected formats without making network or LLM
-calls. They are fixtures, not statistically meaningful experiment inputs. See
+The committed files in `data/samples/` contain example data used in
+the experiment corpus and demonstrate the expected formats. See
 [`data/README.md`](data/README.md) for the complete provenance note.
 
 ### GitHub credentials
@@ -85,13 +82,10 @@ Alternatively, put only the token in a permission-restricted file and pass its p
 package-risk-data --data-dir data all --token-file /path/to/github-token
 ```
 
-The command deliberately has no `--token VALUE` option. Never commit the token file.
-
 ### GitHub activity and semantic enrichment
 
 Maintenance prediction uses monthly GitHub event features. Retrieve only the explicit
-date range needed from [GH Archive](https://www.gharchive.org/); existing hourly files
-are skipped:
+date range needed from [GH Archive](https://www.gharchive.org/):
 
 ```bash
 package-risk-data --data-dir data gharchive \
@@ -111,9 +105,7 @@ python code/helper/gharchive_info_collect.py all \
 ```
 
 Functional summaries and embeddings are derived inputs. The repository includes
-their formats and downstream analysis, but the original enrichment helpers use a
-non-local LLM client and are therefore optional rather than part of public-data
-retrieval. You may provide compatible summaries/embeddings from a local model or
+their formats and downstream analysis. You may provide compatible summaries/embeddings from a local model or
 another service.
 
 ## Analysis workflow
@@ -141,7 +133,7 @@ python code/advanced_maintenance_prediction.py --models Mamba --epochs 50
 ```
 
 The model consumes `data/monthly/delta_YYYY_MM.json` activity sequences and produces
-`mamba_activity_prediction.csv`. Lower `activity_probability` means greater predicted
+`activity_prediction.csv`. Lower `activity_probability` means greater predicted
 maintenance risk.
 
 ### 3. Replaceability
