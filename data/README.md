@@ -9,7 +9,7 @@ Run `package-risk-data all` after installing the project to detect and retrieve
 missing public data. Existing non-empty files are retained unless `--force` is used.
 
 The `crates.csv`, `versions.csv`, and `dependencies.csv` files originate in the
-nightly crates.io **PostgreSQL database dump**. They are raw table exports and retain
+crates.io **PostgreSQL database dump**. They are raw table exports and retain
 database-internal identifiers such as `crate_id` and `version_id`; these identifiers
 are required for joins and are not stable public package identifiers. Use
 `package-risk-data sqlite` to create a local SQLite copy when direct SQL queries are
