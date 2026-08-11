@@ -170,20 +170,16 @@ python code/validate_combined_metric_correlation.py \
 
 ## Resource guide
 
-The figures below are planning estimates for a contemporary 8-core workstation and
-vary with corpus date, network speed, selected period, and accelerator. Measure and
-report the exact environment when reproducing results.
+The figures below are estimations for a contemporary 8-core workstation and
+vary with corpus date, network speed, selected period, and accelerator. 
 
 | Step | Typical wall time | Peak working disk | Main scaling factor |
 |---|---:|---:|---|
 | Download/extract crates.io dump | 10–40 min | 8–15 GB | network and dump size |
-| Download + combine 90 daily download files | 10–30 min | 1–4 GB | network and date window |
 | Convert core CSVs to SQLite (optional) | 15–45 min | 8–20 GB extra | CSV and index size |
-| Filter 24 months of GH Archive | hours to days | 50–300+ GB | raw archive period and events |
+| Filter 3 years of GH Archive | hours to days | 50–300+ GB | raw archive period and events |
 | Dependency criticality | 30 min–several hours | 8–32 GB RAM, 2–10 GB disk | graph size and distance bounds |
 | Maintenance training | 1–8 hours | 4–16 GB disk | model, epochs, CPU/GPU |
-| Semantic enrichment/embeddings | hours | 1–10 GB | model/service throughput |
+| Semantic embeddings | hours | 1–10 GB | model/service throughput |
 | Combine and advisory validation | minutes | under 2 GB | number of crates/advisories |
 
-For a format-only inspection, use `data/samples/`; it needs only a few megabytes and
-does not reproduce the study results.
