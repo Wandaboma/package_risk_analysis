@@ -44,11 +44,6 @@ case-insensitive lookup and returns one such dictionary or `None`.
 `get_hazard_scores_csv()` returns the complete UTF-8 CSV text and can be used
 directly as an HTTP or service response body with content type `text/csv`.
 
-The readable source is committed as
-[`result/crate_hazard_score.csv`](result/crate_hazard_score.csv). It contains exactly
-10,000 lines: one header plus the first 9,999 experiment records, with the stable
-columns `crate_name` and `score`. `score` comes from the experiment's
-`importance_with_download_portion` field.
 
 ## Repository layout
 
